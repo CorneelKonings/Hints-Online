@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Hints Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Mountains+of+Christmas:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Import Map hersteld voor compatibiliteit -->
+    <script type="importmap">
+    {
+      "imports": {
+        "lucide-react": "https://esm.sh/lucide-react@^0.559.0",
+        "react/": "https://esm.sh/react@^19.2.1/",
+        "react": "https://esm.sh/react@^19.2.1",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.32.0",
+        "vite": "https://esm.sh/vite@^7.2.7",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+        "peerjs": "https://esm.sh/peerjs@^1.5.5"
+      }
+    }
+    </script>
+
+    <!-- Tailwind CSS CDN toegevoegd voor directe styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Outfit', 'sans-serif'],
+              christmas: ['"Mountains of Christmas"', 'cursive'],
+            },
+            colors: {
+              xmas: {
+                red: '#E63946',
+                darkred: '#9B2226',
+                green: '#2A9D8F',
+                darkgreen: '#264653',
+                gold: '#E9C46A',
+                cream: '#F1FAEE',
+                background: '#1D3557',
+              }
+            },
+            animation: {
+              'spin-slow': 'spin 8s linear infinite',
+              'wiggle': 'wiggle 2s ease-in-out infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'fall': 'fall 10s linear infinite',
+            },
+            keyframes: {
+              wiggle: {
+                '0%, 100%': { transform: 'rotate(-3deg)' },
+                '50%': { transform: 'rotate(3deg)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              fall: {
+                '0%': { transform: 'translateY(-10vh) translateX(0)' },
+                '100%': { transform: 'translateY(110vh) translateX(20px)' },
+              }
+            }
+          },
+        }
+      }
+    </script>
+
+    <style>
+      /* Custom Styles overgenomen uit index.css */
+      body {
+        font-family: 'Outfit', sans-serif;
+        overscroll-behavior: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .mask-image-b {
+        mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%);
+      }
+    </style>
+  </head>
+  <body class="bg-[#1D3557] text-slate-50 overflow-hidden selection:bg-rose-500 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

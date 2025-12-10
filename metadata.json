@@ -1,0 +1,5 @@
+{
+  "name": "Spin & Guess Party",
+  "description": "A multi-screen party game. Host on iPad (Landscape), Guests on Phones. Spin the wheel, describe words, and teammates guess via their phones!",
+  "requestFramePermissions": []
+}

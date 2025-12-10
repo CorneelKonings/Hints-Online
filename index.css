@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Outfit', sans-serif;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom scrollbar hide */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Mask for chat fade effect */
+.mask-image-b {
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%);
+}
