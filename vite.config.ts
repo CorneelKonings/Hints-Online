@@ -6,8 +6,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Polyfill process.env.API_KEY for the frontend usage
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Polyfill process.env.API_KEY met een fallback zodat de app niet crasht bij undefined
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || '')
     }
   };
 });

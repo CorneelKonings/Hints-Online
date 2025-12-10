@@ -2,7 +2,16 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ThemeId, Difficulty } from "../types";
 import { THEMES } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy init: Maak de client pas aan als we hem nodig hebben.
+// Dit voorkomt crashes bij het opstarten van de app als de env var mist.
+const getAIClient = () => {
+  const key = process.env.API_KEY;
+  if (!key) {
+    console.error("API Key ontbreekt! Zorg dat VITE_API_KEY of API_KEY is ingesteld in .env");
+    throw new Error("API Key ontbreekt");
+  }
+  return new GoogleGenAI({ apiKey: key });
+};
 
 // We generate 3 random nouns/concepts for the game based on theme/difficulty
 export const generateGameWords = async (
@@ -11,6 +20,7 @@ export const generateGameWords = async (
   difficulty: Difficulty
 ): Promise<string[]> => {
   try {
+    const ai = getAIClient();
     const themeLabel = THEMES[themeId].label;
     
     let difficultyPrompt = "";
