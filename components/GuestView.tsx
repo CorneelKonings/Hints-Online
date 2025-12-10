@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GamePhase, Player, GameStateSync } from '../types';
 import { useGuestNetwork } from '../services/network';
@@ -132,6 +131,15 @@ export const GuestView: React.FC = () => {
   return (
     <div className={`h-[100dvh] bg-slate-900 text-white flex flex-col overflow-hidden relative transition-colors duration-500`}>
       <div className={`absolute inset-0 bg-gradient-to-br ${activeTheme.bgGradient} pointer-events-none`}></div>
+      
+       {/* Background Image Layer */}
+       {activeTheme.backgroundImage && (
+           <div 
+             className="absolute inset-0 bg-cover bg-center z-0 transition-opacity duration-1000 pointer-events-none"
+             style={{ backgroundImage: `url(${activeTheme.backgroundImage})`, opacity: 0.5 }}
+           />
+       )}
+
       {/* Snowfall only if winter theme */}
       {isWinterTheme && <Snowfall />}
 

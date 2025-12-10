@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { GamePhase, Player, Guess, NetworkMessage, GameStateSync, ThemeId, Difficulty } from '../types';
 import { useHostNetwork } from '../services/network';
@@ -519,7 +518,16 @@ export const HostView: React.FC = () => {
     <div className={`h-screen w-screen bg-slate-900 text-white overflow-hidden font-sans relative`}>
        {/* Dynamic Background */}
        <div className={`absolute inset-0 bg-gradient-to-br ${activeTheme.bgGradient} z-0 transition-colors duration-1000`}></div>
-       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 z-0"></div>
+       
+       {/* Background Image Layer */}
+       {activeTheme.backgroundImage && (
+           <div 
+             className="absolute inset-0 bg-cover bg-center z-0 transition-opacity duration-1000"
+             style={{ backgroundImage: `url(${activeTheme.backgroundImage})`, opacity: 0.6 }} // Added opacity to ensure text readability
+           />
+       )}
+
+       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 z-0 pointer-events-none"></div>
        
        {isWinterTheme && <Snowfall />}
        

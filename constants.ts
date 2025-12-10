@@ -1,4 +1,3 @@
-
 import { ThemeId, Difficulty } from "./types";
 
 export const CARD_DURATION_SEC = 20;
@@ -26,6 +25,7 @@ export interface ThemeConfig {
   label: string;
   icon: string;
   bgGradient: string; // Tailwind gradient class
+  backgroundImage?: string; // Optional custom background image URL
   primaryColor: string; // Hex for wheel/buttons
   secondaryColor: string; // Hex for wheel/accents
   textColor: string;
@@ -47,11 +47,12 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     id: 'christmas',
     label: 'Kerst',
     icon: '🎄',
-    bgGradient: 'from-[#1D3557] via-[#9B2226] to-[#000000]',
-    primaryColor: '#E63946', // Xmas Red
-    secondaryColor: '#2A9D8F', // Xmas Green
+    bgGradient: 'from-[#0f3028] via-[#1a4036] to-[#0f3028]', // Dark Green matching the image
+    backgroundImage: 'https://img.freepik.com/free-vector/hand-drawn-christmas-background_23-2148762024.jpg', // Placeholder illustration
+    primaryColor: '#D42426', // Classic Santa Red
+    secondaryColor: '#F0B85E', // Gold/Yellow from lights
     textColor: 'text-white',
-    wheelColors: ['#E63946', '#2A9D8F', '#E9C46A', '#264653', '#F4A261', '#F1FAEE']
+    wheelColors: ['#D42426', '#1a4036', '#F0B85E', '#ffffff', '#2A9D8F', '#E63946']
   },
   summer: {
     id: 'summer',
