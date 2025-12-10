@@ -48,7 +48,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     label: 'Kerst',
     icon: '🎄',
     bgGradient: 'from-[#0f3028] via-[#1a4036] to-[#0f3028]', // Dark Green matching the image
-    backgroundImage: 'https://img.freepik.com/free-vector/hand-drawn-christmas-background_23-2148762024.jpg', // Placeholder illustration
+    backgroundImage: 'https://image2url.com/images/1765394417063-ae561b25-f2d0-4d5b-a864-8e4e69aa63b6.png', // Placeholder illustration
     primaryColor: '#D42426', // Classic Santa Red
     secondaryColor: '#F0B85E', // Gold/Yellow from lights
     textColor: 'text-white',
