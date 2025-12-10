@@ -8,22 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Mountains+of+Christmas:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Import Map hersteld voor compatibiliteit -->
-    <script type="importmap">
-    {
-      "imports": {
-        "lucide-react": "https://esm.sh/lucide-react@^0.559.0",
-        "react/": "https://esm.sh/react@^19.2.1/",
-        "react": "https://esm.sh/react@^19.2.1",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
-        "@google/genai": "https://esm.sh/@google/genai@^1.32.0",
-        "vite": "https://esm.sh/vite@^7.2.7",
-        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-        "peerjs": "https://esm.sh/peerjs@^1.5.5"
-      }
-    }
-    </script>
-
     <!-- Tailwind CSS CDN toegevoegd voor directe styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -71,7 +55,7 @@
     </script>
 
     <style>
-      /* Custom Styles overgenomen uit index.css */
+      /* Custom Styles overgenomen uit index.css voor zekerheid */
       body {
         font-family: 'Outfit', sans-serif;
         overscroll-behavior: none;
@@ -90,7 +74,21 @@
         -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 100%);
       }
     </style>
-  </head>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+    "react/": "https://esm.sh/react@^19.2.1/",
+    "peerjs": "https://esm.sh/peerjs@^1.5.5",
+    "@google/genai": "https://esm.sh/@google/genai@^1.32.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.559.0",
+    "vite": "https://esm.sh/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+  }
+}
+</script>
+</head>
   <body class="bg-[#1D3557] text-slate-50 overflow-hidden selection:bg-rose-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
