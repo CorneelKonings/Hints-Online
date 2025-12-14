@@ -7,7 +7,6 @@ export const MAX_ROUNDS = 5;
 
 // --- AUDIO ASSETS (Royalty Free from Pixabay/Mixkit CDNs) ---
 export const AUDIO_ASSETS = {
-  // Only SFX kept as requested
   SFX: {
     SPIN_TICK: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_75681c2062.mp3?filename=click-button-140881.mp3",
     START_ROUND: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=notification-sound-7062.mp3",
@@ -15,6 +14,20 @@ export const AUDIO_ASSETS = {
     WIN_ROUND: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3?filename=success-fanfare-trumpets-6185.mp3",
     TIME_UP: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3?filename=negative-beeps-6008.mp3",
     CLICK: "https://cdn.pixabay.com/download/audio/2023/04/27/audio_f551717255.mp3?filename=ui-click-43196.mp3"
+  },
+  
+  // --- ACHTERGROND MUZIEK ---
+  // Vervang de URL's hieronder met je eigen MP3 links.
+  MUSIC: {
+    // Muziek voor het hoofdmenu (Startscherm)
+    MENU: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112762.mp3", 
+
+    // Muziek per thema
+    STANDARD: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112762.mp3",
+    CHRISTMAS: "https://cdn.pixabay.com/download/audio/2022/11/22/audio_c545eb5324.mp3?filename=christmas-background-music-126442.mp3",
+    SUMMER: "https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3?filename=summer-vibes-118128.mp3",
+    WINTER: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=winter-magic-13175.mp3",
+    AUTUMN: "https://cdn.pixabay.com/download/audio/2020/09/14/audio_76595b4528.mp3?filename=autumn-leaves-7685.mp3"
   }
 };
 
@@ -26,6 +39,7 @@ export interface ThemeConfig {
   icon: string;
   bgGradient: string; // Tailwind gradient class
   backgroundImage?: string; // Optional custom background image URL
+  musicUrl: string; // Background music loop
   primaryColor: string; // Hex for wheel/buttons
   secondaryColor: string; // Hex for wheel/accents
   textColor: string;
@@ -38,6 +52,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     label: 'Standaard',
     icon: '🎲',
     bgGradient: 'from-slate-900 to-indigo-950',
+    musicUrl: AUDIO_ASSETS.MUSIC.STANDARD,
     primaryColor: '#6366f1', // Indigo 500
     secondaryColor: '#a855f7', // Purple 500
     textColor: 'text-white',
@@ -48,7 +63,8 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     label: 'Kerst',
     icon: '🎄',
     bgGradient: 'from-[#0f3028] via-[#1a4036] to-[#0f3028]', // Dark Green matching the image
-    backgroundImage: 'https://image2url.com/images/1765394417063-ae561b25-f2d0-4d5b-a864-8e4e69aa63b6.png', // Placeholder illustration
+    backgroundImage: 'https://image2url.com/images/1765394417063-ae561b25-f2d0-4d5b-a864-8e4e69aa63b6.png', 
+    musicUrl: AUDIO_ASSETS.MUSIC.CHRISTMAS,
     primaryColor: '#D42426', // Classic Santa Red
     secondaryColor: '#F0B85E', // Gold/Yellow from lights
     textColor: 'text-white',
@@ -59,6 +75,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     label: 'Zomer',
     icon: '☀️',
     bgGradient: 'from-orange-400 via-rose-400 to-yellow-300',
+    musicUrl: AUDIO_ASSETS.MUSIC.SUMMER,
     primaryColor: '#f97316', // Orange
     secondaryColor: '#0ea5e9', // Sky blue
     textColor: 'text-white',
@@ -69,6 +86,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     label: 'Winter',
     icon: '❄️',
     bgGradient: 'from-slate-900 via-cyan-900 to-slate-800',
+    musicUrl: AUDIO_ASSETS.MUSIC.WINTER,
     primaryColor: '#06b6d4', // Cyan
     secondaryColor: '#f8fafc', // Slate 50
     textColor: 'text-cyan-50',
@@ -79,6 +97,7 @@ export const THEMES: Record<ThemeId, ThemeConfig> = {
     label: 'Herfst',
     icon: '🍂',
     bgGradient: 'from-orange-900 via-amber-800 to-stone-900',
+    musicUrl: AUDIO_ASSETS.MUSIC.AUTUMN,
     primaryColor: '#d97706', // Amber
     secondaryColor: '#78350f', // Brown
     textColor: 'text-orange-50',

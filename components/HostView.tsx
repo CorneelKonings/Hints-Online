@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GamePhase, Player, Guess, NetworkMessage, GameStateSync, ThemeId, Difficulty } from '../types';
 import { useHostNetwork } from '../services/network';
 import { CARD_DURATION_SEC, TOTAL_CARDS_PER_TURN, MAX_ROUNDS, THEMES, DIFFICULTIES } from '../constants';
 import { generateGameWords } from '../services/geminiService';
 import { SpinningWheel } from './SpinningWheel';
-import { Play, Users, Trophy, SkipForward, Snowflake as SnowflakeIcon, Gift, Star, Medal, Settings, Eye, EyeOff, Smartphone } from 'lucide-react';
+import { Play, Users, Trophy, SkipForward, Star, Medal, Settings, Smartphone, Maximize, Minimize, Volume2, VolumeX, Gift } from 'lucide-react';
 import { Snowfall } from './Snowfall';
 import { audio } from '../services/audioService';
+import QRCode from 'react-qr-code';
 
 // Helper for fuzzy comparison (remove accents, lowercase)
 const normalizeText = (text: string) => {
@@ -34,6 +35,10 @@ export const HostView: React.FC = () => {
   // Settings State
   const [selectedThemeId, setSelectedThemeId] = useState<ThemeId>('standard');
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('medium');
+  
+  // View State
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   // Game State
   const [phase, setPhase] = useState<GamePhase>(GamePhase.LOBBY);
@@ -45,10 +50,15 @@ export const HostView: React.FC = () => {
   const [targetWheelPlayer, setTargetWheelPlayer] = useState<Player | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [gameWords, setGameWords] = useState<string[]>([]);
+  // We keep track of all used words to prevent Gemini from repeating them
+  const [usedWords, setUsedWords] = useState<string[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(CARD_DURATION_SEC);
   const [isSpinning, setIsSpinning] = useState(false);
   const [roundScore, setRoundScore] = useState(0); 
+  
+  // Track processed guesses to prevent double scoring
+  const processedGuessIds = useRef<Set<string>>(new Set());
 
   // Success Overlay State (synced to phones)
   const [winnerNotification, setWinnerNotification] = useState<{guesserName: string, timestamp: number} | undefined>(undefined);
@@ -74,11 +84,44 @@ export const HostView: React.FC = () => {
     broadcast({ type: 'STATE_UPDATE', state });
   }, [phase, players, guesses, currentPlayer, timeLeft, currentCardIndex, broadcast, winnerNotification, selectedThemeId, gameWords]);
 
+  // Audio & Fullscreen Handlers
+  useEffect(() => {
+    // Play theme music when theme changes or mount
+    const theme = THEMES[selectedThemeId];
+    audio.playBGM(theme.musicUrl);
+    
+    return () => {
+       // Cleanup not strictly necessary as playBGM handles replacement
+    };
+  }, [selectedThemeId]);
+
+  const toggleMute = () => {
+    const newState = !isMuted;
+    setIsMuted(newState);
+    audio.setMute(newState);
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        setIsFullscreen(true);
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            setIsFullscreen(false);
+        }
+    }
+  };
+
   // Actions
   const handleSuccess = useCallback((guesserPlayerId: string, guesserName: string) => {
+    // Safety check: The describer cannot guess their own word
+    if (currentPlayer && guesserPlayerId === currentPlayer.id) return;
+    
     audio.playCorrect(); // SFX
     setWinnerNotification({ guesserName, timestamp: Date.now() });
     
+    // Update scores: +1 for Guesser, +1 for Describer
     setPlayers(prev => prev.map(p => {
         if (p.id === guesserPlayerId) return { ...p, score: p.score + 1 };
         if (p.id === currentPlayer?.id) return { ...p, score: p.score + 1 };
@@ -132,8 +175,16 @@ export const HostView: React.FC = () => {
          }
       }
       else if (lastMessage.type === 'SEND_GUESS') {
+        const newGuess = lastMessage.guess;
+        
+        // Prevent processing the same guess ID twice
+        if (processedGuessIds.current.has(newGuess.id)) return;
+        processedGuessIds.current.add(newGuess.id);
+        
+        // Cleanup old guess IDs occasionally
+        if (processedGuessIds.current.size > 100) processedGuessIds.current.clear();
+
         if (phase === GamePhase.ROUND_ACTIVE && !winnerNotification) { 
-          const newGuess = lastMessage.guess;
           setGuesses(prev => [newGuess, ...prev]);
 
           const currentWord = gameWords[currentCardIndex];
@@ -198,8 +249,16 @@ export const HostView: React.FC = () => {
     setCurrentPlayer(targetWheelPlayer);
     setPhase(GamePhase.ROUND_INTRO);
     
-    const words = await generateGameWords(TOTAL_CARDS_PER_TURN, selectedThemeId, selectedDifficulty);
+    // Generate new words, passing the history of used words
+    const words = await generateGameWords(
+        TOTAL_CARDS_PER_TURN, 
+        selectedThemeId, 
+        selectedDifficulty, 
+        usedWords
+    );
+    
     setGameWords(words);
+    setUsedWords(prev => [...prev, ...words]); // Add new words to history
     setCurrentCardIndex(0);
     setRoundScore(0);
   };
@@ -219,6 +278,7 @@ export const HostView: React.FC = () => {
     if (turnCount >= MAX_ROUNDS) {
         setTurnCount(1);
         setPhase(GamePhase.LOBBY); // Reset to lobby
+        setUsedWords([]); // Reset word history on game end
     } else {
         setTurnCount(prev => prev + 1);
         setPhase(GamePhase.SPINNING);
@@ -240,10 +300,29 @@ export const HostView: React.FC = () => {
           <p className="text-white/70 text-xl font-medium tracking-wide">Join met je telefoon!</p>
         </div>
         
-        <GlassCard className="px-8 py-4 flex flex-col items-center animate-float">
-          <span className="text-white/60 text-sm font-bold tracking-widest uppercase mb-1">Room Code</span>
-          <span className="text-6xl font-black text-white font-mono tracking-widest drop-shadow-lg">{roomCode}</span>
-        </GlassCard>
+        {/* TOP RIGHT CONTROLS & CODES */}
+        <div className="flex flex-col items-end gap-6">
+            <div className="flex items-center gap-4">
+                <button onClick={toggleMute} className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    {isMuted ? <VolumeX className="text-white" /> : <Volume2 className="text-white" />}
+                </button>
+                <button onClick={toggleFullscreen} className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    {isFullscreen ? <Minimize className="text-white" /> : <Maximize className="text-white" />}
+                </button>
+            </div>
+
+            <div className="flex items-end gap-6">
+                <div className="bg-white p-3 rounded-2xl shadow-xl transform rotate-[-2deg] flex flex-col items-center">
+                    <QRCode value="https://hints-online.vercel.app" size={100} />
+                    <span className="text-slate-900 text-[10px] font-bold mt-2 uppercase tracking-wide">Scan Mij</span>
+                </div>
+
+                <GlassCard className="px-8 py-4 flex flex-col items-center animate-float">
+                  <span className="text-white/60 text-sm font-bold tracking-widest uppercase mb-1">Room Code</span>
+                  <span className="text-6xl font-black text-white font-mono tracking-widest drop-shadow-lg">{roomCode}</span>
+                </GlassCard>
+            </div>
+        </div>
       </div>
       
       <div className="flex gap-8 flex-1 min-h-0">
@@ -346,6 +425,15 @@ export const HostView: React.FC = () => {
   const renderWheel = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full relative z-10 p-8">
+        <div className="absolute top-8 right-8 flex gap-4">
+             <button onClick={toggleMute} className="w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors">
+                {isMuted ? <VolumeX className="text-white" /> : <Volume2 className="text-white" />}
+            </button>
+             <button onClick={toggleFullscreen} className="w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors">
+                {isFullscreen ? <Minimize className="text-white" /> : <Maximize className="text-white" />}
+            </button>
+        </div>
+        
         <h2 className="text-6xl font-bold mb-4 text-white drop-shadow-xl animate-float">
           Beurt {turnCount} van {MAX_ROUNDS}
         </h2>
@@ -415,6 +503,15 @@ export const HostView: React.FC = () => {
                             <div key={i} className={`w-3 h-3 rounded-full ${i < currentCardIndex ? 'bg-white' : i === currentCardIndex ? 'bg-white animate-pulse' : 'bg-white/20'}`} />
                         ))}
                     </div>
+                </div>
+                 {/* Mini Controls */}
+                <div className="flex gap-2 border-l border-white/10 pl-4">
+                    <button onClick={toggleMute} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                    <button onClick={toggleFullscreen} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    </button>
                 </div>
             </div>
         </div>
@@ -493,6 +590,15 @@ export const HostView: React.FC = () => {
 
   const renderSummary = () => (
     <div className="flex flex-col items-center justify-center h-full relative z-10 p-8">
+         <div className="absolute top-8 right-8 flex gap-4">
+             <button onClick={toggleMute} className="w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors">
+                {isMuted ? <VolumeX className="text-white" /> : <Volume2 className="text-white" />}
+            </button>
+             <button onClick={toggleFullscreen} className="w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors">
+                {isFullscreen ? <Minimize className="text-white" /> : <Maximize className="text-white" />}
+            </button>
+        </div>
+
         <GlassCard className="p-16 text-center max-w-4xl w-full border-t-8 transform hover:scale-[1.01] transition-transform" style={{borderColor: activeTheme.primaryColor}}>
           <Trophy className="w-32 h-32 mx-auto mb-8 animate-bounce" style={{color: activeTheme.primaryColor}} />
           <h2 className="text-6xl md:text-8xl font-bold mb-4 text-white">Ronde Voorbij!</h2>

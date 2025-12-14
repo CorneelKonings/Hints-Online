@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HostView } from './components/HostView';
 import { GuestView } from './components/GuestView';
 import { Tablet, Smartphone, Sparkles } from 'lucide-react';
 import { Snowfall } from './components/Snowfall';
+import { audio } from './services/audioService';
+import { AUDIO_ASSETS } from './constants';
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'selection' | 'host' | 'guest'>('selection');
+
+  // Start menu music on mount (interaction needed usually)
+  useEffect(() => {
+    if (viewMode === 'selection') {
+        audio.playBGM(AUDIO_ASSETS.MUSIC.MENU, 0.2);
+    }
+    // When switching to HostView, HostView will take over music control (playing theme music).
+    // When switching to GuestView, we might want to stop music or keep it. 
+    // Currently GuestView doesn't explicitly play music, so we can leave it running or stop it.
+    // For now, let's stop it if we go to Guest so it doesn't annoy phone users.
+    if (viewMode === 'guest') {
+        audio.stopBGM();
+    }
+  }, [viewMode]);
 
   if (viewMode === 'host') {
     return <HostView />;
@@ -16,7 +32,13 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden">
+    <div 
+        className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden"
+        onClick={() => {
+            // Fallback: If autoplay blocked, first click starts music
+            audio.playBGM(AUDIO_ASSETS.MUSIC.MENU, 0.2);
+        }}
+    >
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-slate-900 to-black z-0"></div>
       
       <div className="max-w-2xl w-full text-center space-y-12 z-10">
@@ -33,7 +55,11 @@ const App: React.FC = () => {
 
         <div className="grid md:grid-cols-2 gap-8 px-4">
           <button 
-            onClick={() => setViewMode('host')}
+            onClick={(e) => {
+                e.stopPropagation(); // Prevent double trigger
+                audio.playClick();
+                setViewMode('host');
+            }}
             className="group relative bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 p-8 rounded-[2rem] transition-all hover:-translate-y-2 hover:shadow-2xl overflow-hidden text-left"
           >
              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
@@ -51,7 +77,11 @@ const App: React.FC = () => {
           </button>
 
           <button 
-            onClick={() => setViewMode('guest')}
+            onClick={(e) => {
+                e.stopPropagation();
+                audio.playClick();
+                setViewMode('guest');
+            }}
             className="group relative bg-gradient-to-br from-indigo-600 to-purple-800 border border-white/10 p-8 rounded-[2rem] transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-900/50 overflow-hidden text-left"
           >
              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
