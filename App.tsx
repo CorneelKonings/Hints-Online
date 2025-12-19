@@ -9,14 +9,19 @@ import { AUDIO_ASSETS } from './constants';
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'selection' | 'host' | 'guest'>('selection');
 
+  // Check for auto-join code in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('code')) {
+      setViewMode('guest');
+    }
+  }, []);
+
   // Start menu music on mount (interaction needed usually)
   useEffect(() => {
     if (viewMode === 'selection') {
         audio.playBGM(AUDIO_ASSETS.MUSIC.MENU, 0.2);
     }
-    // When switching to HostView, HostView will take over music control (playing theme music).
-    // When switching to GuestView, we might want to stop music or keep it. 
-    // Currently GuestView doesn't explicitly play music, so we can leave it running or stop it.
     // For now, let's stop it if we go to Guest so it doesn't annoy phone users.
     if (viewMode === 'guest') {
         audio.stopBGM();

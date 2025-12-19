@@ -14,6 +14,7 @@ export const GuestView: React.FC = () => {
   const [gameState, setGameState] = useState<GameStateSync | null>(null);
   const [guessInput, setGuessInput] = useState('');
   const [myId] = useState(`player_${Math.random().toString(36).substr(2, 5)}`);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
 
   // Auto-fill room code from URL parameter
   useEffect(() => {
@@ -21,6 +22,7 @@ export const GuestView: React.FC = () => {
     const code = params.get('code');
     if (code) {
       setRoomCodeInput(code.toUpperCase());
+      setIsAutoFilled(true);
     }
   }, []);
 
@@ -82,45 +84,50 @@ export const GuestView: React.FC = () => {
               <Gift className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-5xl font-bold text-white drop-shadow-md">Hints Online</h1>
-            <p className="text-white/60 font-medium tracking-wide uppercase text-sm">Scan geslaagd! Vul je naam in.</p>
+            <p className="text-white/60 font-medium tracking-wide uppercase text-sm">
+              {isAutoFilled ? `Kamer: ${roomCodeInput}` : 'Vul je gegevens in'}
+            </p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl space-y-6">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-[2.5rem] p-8 shadow-2xl space-y-8">
              {error && (
                 <div className="bg-red-500/80 border border-red-400 text-white p-4 rounded-2xl text-center font-bold text-sm">
                   ⚠️ {error}
                 </div>
               )}
 
-             <div className="space-y-2">
-               <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest ml-1">Kamer Code</label>
-               <input 
-                  value={roomCodeInput}
-                  onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
-                  className="w-full bg-black/20 border-2 border-white/10 focus:border-indigo-400 focus:bg-black/40 transition-all rounded-2xl px-4 py-4 text-3xl font-mono font-bold text-center tracking-[0.5em] text-white placeholder-white/20 outline-none"
-                  placeholder="CODE"
-                  maxLength={4}
-                />
-             </div>
+             {!isAutoFilled && (
+               <div className="space-y-2">
+                 <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest ml-1">Kamer Code</label>
+                 <input 
+                    value={roomCodeInput}
+                    onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
+                    className="w-full bg-black/20 border-2 border-white/10 focus:border-indigo-400 focus:bg-black/40 transition-all rounded-2xl px-4 py-4 text-3xl font-mono font-bold text-center tracking-[0.5em] text-white placeholder-white/20 outline-none"
+                    placeholder="CODE"
+                    maxLength={4}
+                  />
+               </div>
+             )}
 
-             <div className="space-y-2">
-               <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest ml-1">Jouw Naam</label>
+             <div className="space-y-4">
+               <label className="text-xl font-bold text-white block text-center">Hoe heet je?</label>
                <input 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-black/20 border-2 border-white/10 focus:border-indigo-400 focus:bg-black/40 transition-all rounded-2xl px-4 py-4 text-xl font-bold text-white placeholder-white/20 outline-none"
-                  placeholder="Bijv. Speler 1"
+                  className="w-full bg-white text-slate-900 border-none transition-all rounded-[1.5rem] px-6 py-5 text-2xl font-bold text-center placeholder-slate-300 outline-none shadow-inner"
+                  placeholder="Typ je naam..."
                   autoFocus
+                  onKeyPress={(e) => e.key === 'Enter' && joinLobby()}
                 />
              </div>
           </div>
 
           <button 
             onClick={joinLobby}
-            disabled={!name || roomCodeInput.length < 4}
-            className="w-full py-5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-xl font-bold text-white shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:grayscale"
+            disabled={!name.trim() || roomCodeInput.length < 4}
+            className="w-full py-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[2rem] text-2xl font-black text-white shadow-[0_10px_20px_rgba(79,70,229,0.3)] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
           >
-            Start Spelen
+            Meedoen!
           </button>
         </div>
       </div>
