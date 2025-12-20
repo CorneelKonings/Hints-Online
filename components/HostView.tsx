@@ -4,7 +4,7 @@ import { useHostNetwork } from '../services/network';
 import { CARD_DURATION_SEC, TOTAL_CARDS_PER_TURN, MAX_ROUNDS, THEMES, DIFFICULTIES } from '../constants';
 import { generateGameWords } from '../services/geminiService';
 import { SpinningWheel } from './SpinningWheel';
-import { Play, Users, Trophy, SkipForward, Star, Medal, Settings, Smartphone, Maximize, Minimize, Volume2, VolumeX, Gift } from 'lucide-react';
+import { Play, Users, Trophy, SkipForward, Star, Medal, Settings, Smartphone, Maximize, Minimize, Volume2, VolumeX, Gift, XCircle } from 'lucide-react';
 import { Snowfall } from './Snowfall';
 import { audio } from '../services/audioService';
 import QRCode from 'react-qr-code';
@@ -47,7 +47,7 @@ export const HostView: React.FC = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [roundScore, setRoundScore] = useState(0); 
   const processedGuessIds = useRef<Set<string>>(new Set());
-  const [winnerNotification, setWinnerNotification] = useState<{guesserName: string, timestamp: number} | undefined>(undefined);
+  const [winnerNotification, setWinnerNotification] = useState<{guesserName: string, word: string, isCorrect: boolean} | undefined>(undefined);
 
   const syncState = useCallback(() => {
     const currentWord = gameWords[currentCardIndex];
@@ -63,7 +63,10 @@ export const HostView: React.FC = () => {
         totalCards: TOTAL_CARDS_PER_TURN,
         secretWord: currentWord
       } : undefined,
-      winnerNotification
+      winnerNotification: winnerNotification ? { 
+        guesserName: winnerNotification.guesserName, 
+        timestamp: Date.now() 
+      } : undefined
     };
     broadcast({ type: 'STATE_UPDATE', state });
   }, [phase, players, guesses, currentPlayer, timeLeft, currentCardIndex, broadcast, winnerNotification, selectedThemeId, gameWords]);
@@ -91,13 +94,26 @@ export const HostView: React.FC = () => {
     }
   };
 
+  const nextWordOrSummary = useCallback(() => {
+    if (currentCardIndex < TOTAL_CARDS_PER_TURN - 1) {
+        setCurrentCardIndex(prev => prev + 1);
+        setGuesses([]);
+        setPhase(GamePhase.ROUND_ACTIVE);
+        setTimeLeft(CARD_DURATION_SEC);
+        audio.playStartRound();
+    } else {
+        audio.playWin();
+        setPhase(GamePhase.ROUND_SUMMARY);
+    }
+  }, [currentCardIndex]);
+
   const handleSuccess = useCallback((guesserPlayerId: string, guesserName: string) => {
     if (currentPlayer && guesserPlayerId === currentPlayer.id) return;
     
     audio.playCorrect();
-    setWinnerNotification({ guesserName, timestamp: Date.now() });
+    const word = gameWords[currentCardIndex];
+    setWinnerNotification({ guesserName, word, isCorrect: true });
     
-    // STRICT SCORING: Only guesser and describer get a point
     setPlayers(prev => prev.map(p => {
         if (p.id === guesserPlayerId) return { ...p, score: p.score + 1 };
         if (currentPlayer && p.id === currentPlayer.id) return { ...p, score: p.score + 1 };
@@ -108,31 +124,20 @@ export const HostView: React.FC = () => {
 
     setTimeout(() => {
         setWinnerNotification(undefined);
-        if (currentCardIndex < TOTAL_CARDS_PER_TURN - 1) {
-            setCurrentCardIndex(prev => prev + 1);
-            setGuesses([]);
-            setPhase(GamePhase.ROUND_ACTIVE);
-            setTimeLeft(CARD_DURATION_SEC);
-            audio.playStartRound();
-        } else {
-            audio.playWin();
-            setPhase(GamePhase.ROUND_SUMMARY);
-        }
+        nextWordOrSummary();
     }, 3000);
-  }, [currentCardIndex, currentPlayer]);
+  }, [currentCardIndex, currentPlayer, gameWords, nextWordOrSummary]);
 
   const handleFail = useCallback(() => {
     audio.playTimeUp();
-    if (currentCardIndex < TOTAL_CARDS_PER_TURN - 1) {
-      setCurrentCardIndex(prev => prev + 1);
-      setGuesses([]);
-      setPhase(GamePhase.ROUND_ACTIVE);
-      setTimeLeft(CARD_DURATION_SEC);
-      audio.playStartRound();
-    } else {
-      setPhase(GamePhase.ROUND_SUMMARY);
-    }
-  }, [currentCardIndex]);
+    const word = gameWords[currentCardIndex];
+    setWinnerNotification({ guesserName: "Niemand", word, isCorrect: false });
+    
+    setTimeout(() => {
+      setWinnerNotification(undefined);
+      nextWordOrSummary();
+    }, 3000);
+  }, [currentCardIndex, gameWords, nextWordOrSummary]);
 
   useEffect(() => {
     if (lastMessage) {
@@ -350,11 +355,22 @@ export const HostView: React.FC = () => {
     return (
       <div className="h-full flex flex-col relative z-10">
         {winnerNotification && (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                <div className="bg-slate-900 border-4 border-white/20 p-16 rounded-[3rem] text-center animate-in zoom-in">
-                    <Star className="w-32 h-32 text-yellow-400 fill-yellow-400 mx-auto mb-6 animate-spin-slow" />
-                    <h2 className="text-4xl text-white/80 font-bold uppercase mb-4">Goed Gedaan!</h2>
-                    <div className="text-6xl font-black text-white tracking-tight">Geraden door<br/><span className="text-yellow-400">{winnerNotification.guesserName}</span></div>
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+                <div className={`border-4 p-16 rounded-[4rem] text-center animate-in zoom-in duration-300 shadow-2xl bg-slate-900 ${winnerNotification.isCorrect ? 'border-green-500/50' : 'border-red-500/50'}`}>
+                    {winnerNotification.isCorrect ? (
+                        <Star className="w-32 h-32 text-yellow-400 fill-yellow-400 mx-auto mb-6 animate-spin-slow" />
+                    ) : (
+                        <XCircle className="w-32 h-32 text-red-500 mx-auto mb-6 animate-bounce" />
+                    )}
+                    
+                    <h2 className="text-3xl text-white/60 font-bold uppercase mb-2">
+                        {winnerNotification.isCorrect ? `Geraden door ${winnerNotification.guesserName}!` : 'Tijd is om!'}
+                    </h2>
+                    
+                    <div className="text-4xl text-white/40 uppercase font-black tracking-widest mb-4">Het woord was:</div>
+                    <div className={`text-8xl font-black tracking-tighter uppercase ${winnerNotification.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                        {winnerNotification.word}
+                    </div>
                 </div>
             </div>
         )}
